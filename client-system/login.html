@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: #0a0a0a;
+      --secondary-bg: #1a1a1a;
+      --accent-blue: #00d4ff;
+      --accent-green: #00ff88;
+      --text-primary: #ffffff;
+      --text-secondary: #b3b3b3;
+      --border-radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Merriweather', serif;
+      background: var(--primary-bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* Background effects to match questions page */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, transparent 98%, rgba(0, 212, 255, 0.1) 100%),
+        linear-gradient(0deg, transparent 98%, rgba(0, 212, 255, 0.1) 100%);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(26, 26, 26, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+      padding: 1rem 2rem;
+      z-index: 10;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .nav { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; }
+    .logo { font-family: 'Roboto', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--accent-blue); text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+
+    .main-content { display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 80px); padding: 2rem; }
+
+    .login-container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--secondary-bg);
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
+
+    .login-container h2 {
+      font-family: 'Roboto', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+      text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .input-field { position: relative; margin: 1rem auto 1.5rem; max-width: 420px; }
+    .input-field i { position: absolute; top: 50%; left: 14px; transform: translateY(-50%); color: #9aa4aa; font-size: 18px; }
+    .input-field input {
+      width: 100%;
+      padding: 14px 16px 14px 42px;
+      border-radius: var(--border-radius);
+      border: 2px solid transparent;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+      font-size: 16px;
+      transition: var(--transition);
+    }
+    .input-field input::placeholder { color: var(--text-secondary); }
+    .input-field input:focus { outline: none; border-color: var(--accent-blue); background: rgba(0,212,255,0.08); box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2); }
+
+    .login-button {
+      display: inline-block;
+      padding: 14px 28px;
+      min-width: 220px;
+      border: none;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .login-button:hover { transform: translateY(-2px); background: #eaeaea; }
+
+    .disclaimer {
+      margin: 16px auto 0;
+      color: #ff0000;
+      font-size: 10px;
+      line-height: 1.4;
+      max-width: 520px;
+    }
+
+    @media (max-width: 768px) {
+      .login-container { padding: 1.5rem; }
+      .login-container h2 { font-size: 1.6rem; }
+    }
+  </style>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <header class="header">
+    <nav class="nav">
+      <div class="logo">QuizMaster</div>
+    </nav>
+  </header>
+
+  <main class="main-content">
+    <div class="login-container">
+      <h2>Player Credentials</h2>
+
+      <div class="input-field">
+        <i class="fas fa-user"></i>
+        <input type="text" id="teamName" placeholder="Team name" />
+      </div>
+
+      <button class="login-button" id="loginBtn">Start Quiz</button>
+      <p class="disclaimer">Disclaimer: As soon as you click Start, the quiz questions will be loaded along with a timer.</p>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('loginBtn').addEventListener('click', function () {
+      const teamNameInput = document.getElementById('teamName');
+      const teamName = (teamNameInput.value || '').trim();
+      if (!teamName) {
+        teamNameInput.focus();
+        return;
+      }
+      // Persist team name for attributing results
+      try {
+        localStorage.setItem('teamName', teamName);
+      } catch (e) {}
+
+      // Connect client to server and store clientId
+      fetch('/api/client/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: teamName })
+      })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to connect');
+        return res.json();
+      })
+      .then((data) => {
+        try {
+          if (data && data.clientId) localStorage.setItem('clientId', data.clientId);
+          if (data && data.quizData) localStorage.setItem('quizData', JSON.stringify(data.quizData));
+        } catch (e) {}
+        // Redirect to quiz page served by the server
+        window.location.href = '/client-system/question.html';
+      })
+      .catch(() => {
+        // Best-effort redirect even if connect failed; question page will handle errors
+        window.location.href = '/client-system/question.html';
+      });
+    });
+  </script>
+
+</body>
+</html>
+

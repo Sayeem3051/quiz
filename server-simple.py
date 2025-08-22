@@ -16,6 +16,7 @@ CORS(app)
 UPLOADS_DIR = 'uploads'
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 QUIZ_JSON_PATH = os.path.join(UPLOADS_DIR, 'quiz.json')
+SAMPLE_QUIZ_PATH = os.path.join(os.path.dirname(__file__), 'sample-quiz.json')
 
 # Quiz data is loaded from disk or upload (no hardcoded fallback)
 quiz_data = None
@@ -64,6 +65,7 @@ def validate_quiz_payload(payload: dict):
 def load_quiz_from_disk():
     """Load quiz JSON from disk if present; update global quiz_data."""
     global quiz_data
+    # Prefer uploaded quiz if present
     if os.path.exists(QUIZ_JSON_PATH):
         try:
             with open(QUIZ_JSON_PATH, 'r', encoding='utf-8') as f:
@@ -75,8 +77,24 @@ def load_quiz_from_disk():
                 return
             quiz_data = payload
             print(f"Loaded quiz from {QUIZ_JSON_PATH}: {quiz_data.get('title')} ({len(quiz_data.get('questions', []))} questions)")
+            return
         except Exception as e:
             print(f"Failed to load quiz.json: {e}. No quiz loaded.")
+
+    # Fallback to bundled sample-quiz.json for convenience
+    if os.path.exists(SAMPLE_QUIZ_PATH):
+        try:
+            with open(SAMPLE_QUIZ_PATH, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+            ok, err = validate_quiz_payload(payload)
+            if not ok:
+                print(f"Invalid sample-quiz.json schema: {err}. No quiz loaded.")
+                quiz_data = None
+                return
+            quiz_data = payload
+            print(f"Loaded sample quiz: {quiz_data.get('title')} ({len(quiz_data.get('questions', []))} questions)")
+        except Exception as e:
+            print(f"Failed to load sample-quiz.json: {e}. No quiz loaded.")
     else:
         print("No quiz.json found. Upload a quiz via the admin panel.")
 
@@ -93,7 +111,7 @@ def admin_panel():
 @app.route('/client')
 def client_system():
     """Serve the client system"""
-    return send_from_directory('client-system', 'index.html')
+    return send_from_directory('client-system', 'login.html')
 
 @app.route('/admin-panel/<path:filename>')
 def admin_static(filename):
@@ -273,9 +291,16 @@ def get_clients():
 @app.route('/api/client/connect', methods=['POST'])
 def client_connect():
     client_id = str(uuid.uuid4())
+    data = request.get_json(silent=True) or {}
+    provided_name = data.get('name')
+    safe_name = None
+    if isinstance(provided_name, str):
+        stripped = provided_name.strip()
+        if stripped:
+            safe_name = stripped
     client_info = {
         'id': client_id,
-        'name': f'Client {len(connected_clients) + 1}',
+        'name': safe_name or f'Client {len(connected_clients) + 1}',
         'status': 'quiz-active' if quiz_in_progress else 'waiting'
     }
     connected_clients[client_id] = client_info
