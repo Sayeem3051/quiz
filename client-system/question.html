@@ -626,7 +626,7 @@
         function startTimer() {
             // Clear any existing timer
             if (timerInterval) {
-                clearTimeout(timerInterval);
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
             
@@ -637,8 +637,8 @@
             
             console.log(`Starting timer: ${timeLeft} seconds`);
             
-            // Simple countdown using setInterval
-            timerInterval = setInterval(() => {
+            // Create a simple countdown function
+            const countdown = () => {
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
@@ -648,10 +648,12 @@
                     if (timeLeft <= 3) {
                         timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
                     }
+                    
+                    // Schedule next countdown
+                    timerInterval = setTimeout(countdown, 1000);
                 } else {
                     // Time's up!
                     console.log('Time is up! Moving to next question');
-                    clearInterval(timerInterval);
                     timerInterval = null;
                     
                     // Show 0 briefly
@@ -669,7 +671,10 @@
                         }
                     }, 1000);
                 }
-            }, 1000);
+            };
+            
+            // Start the countdown
+            countdown();
         }
 
         function submitQuiz() {
@@ -701,7 +706,7 @@
 
             // Stop timer
             if (timerInterval) {
-                clearInterval(timerInterval);
+                clearTimeout(timerInterval);
                 timerInterval = null;
             }
 
@@ -840,7 +845,7 @@
             
             // Clear any existing timer
             if (timerInterval) {
-                clearInterval(timerInterval);
+                clearTimeout(timerInterval);
                 timerInterval = null;
             }
             
