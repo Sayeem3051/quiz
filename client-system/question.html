@@ -603,8 +603,13 @@
             // Reset timer and advanceInProgress flag
             timeLeft = 5;
             advanceInProgress = false;
+            
+            // Reset timer display
             timerElement.textContent = timeLeft;
-            console.log(`Timer reset to ${timeLeft} seconds`);
+            timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
+            timerElement.style.animation = "pulse 2s ease-in-out infinite";
+            
+            console.log(`Timer reset to ${timeLeft} seconds for question ${currentQuestionIndex + 1}`);
             
             // Start timer for this question
             startTimer();
@@ -625,13 +630,19 @@
         });
 
         function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
+            // Clear any existing timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
             
-            // Reset timer animation
+            // Reset timer animation and background
             timerElement.style.animation = "pulse 2s ease-in-out infinite";
+            timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
             
             console.log(`Starting timer for question ${currentQuestionIndex + 1}, time left: ${timeLeft}`);
             
+            // Start the countdown
             timerInterval = setInterval(() => {
                 // Check if quiz is still active
                 if (!quizStarted) {
@@ -640,6 +651,7 @@
                     return;
                 }
 
+                // Update timer display
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
@@ -652,16 +664,21 @@
                 } else {
                     // Time's up!
                     console.log('Time is up! Moving to next question');
+                    
+                    // Clear the interval
                     clearInterval(timerInterval);
                     timerInterval = null;
                     
+                    // Check if already advancing
                     if (advanceInProgress) {
-                        console.log('Already advancing, skipping');
+                        console.log('Already advancing, skipping timer advance');
                         return;
                     }
                     
+                    // Set advancing flag
                     advanceInProgress = true;
-                    // If unanswered, record as unanswered (null)
+                    
+                    // Record unanswered question if no selection
                     if (selections[currentQuestionIndex] === undefined) {
                         selections[currentQuestionIndex] = null;
                         console.log('Recording unanswered question');
@@ -672,7 +689,9 @@
                     timerElement.style.background = 'linear-gradient(45deg, #ff0000, #ff6b6b)';
                     timerElement.style.animation = 'pulse 0.3s ease-in-out infinite';
                     
+                    // Wait 1 second then advance
                     setTimeout(() => {
+                        console.log('Timer advance timeout, moving to next question');
                         moveToNextQuestion();
                     }, 1000);
                 }
@@ -721,8 +740,15 @@
                 timerInterval = null;
             }
 
-            // Immediately advance
-            moveToNextQuestion();
+            // Show answer submitted feedback
+            timerElement.textContent = '✓';
+            timerElement.style.background = 'linear-gradient(45deg, var(--success), #00ff88)';
+            timerElement.style.animation = 'pulse 0.5s ease-in-out infinite';
+
+            // Wait a moment then advance
+            setTimeout(() => {
+                moveToNextQuestion();
+            }, 500);
         }
         
         function moveToNextQuestion() {
@@ -843,6 +869,17 @@
             }
         }
 
+        // Test timer function for debugging
+        function testTimer() {
+            console.log('Testing timer...');
+            timeLeft = 5;
+            advanceInProgress = false;
+            timerElement.textContent = timeLeft;
+            timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
+            timerElement.style.animation = "pulse 2s ease-in-out infinite";
+            startTimer();
+        }
+
         // Check initial status after questions are loaded
         window.onload = function() {
             // First check if quiz has started
@@ -850,6 +887,10 @@
             
             // Set up periodic status checking every 3 seconds
             setInterval(checkQuizStatus, 3000);
+            
+            // Debug: Test timer functionality
+            console.log('Quiz page loaded, timer element:', timerElement);
+            console.log('Initial timeLeft:', timeLeft);
         };
     </script>
 </body>
