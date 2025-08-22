@@ -461,6 +461,7 @@
                 <div class="status-text" id="statusText">Checking quiz status...</div>
             </div>
             <button class="refresh-btn" onclick="checkQuizStatus()">Refresh Status</button>
+            <button class="refresh-btn" onclick="testTimer()" style="margin-left: 10px;">Test Timer</button>
         </div>
 
         <div class="quiz-container fade-in" id="quizContainer" style="display: none;">
@@ -625,7 +626,7 @@
         function startTimer() {
             // Clear any existing timer
             if (timerInterval) {
-                clearInterval(timerInterval);
+                clearTimeout(timerInterval);
                 timerInterval = null;
             }
             
@@ -636,8 +637,8 @@
             
             console.log(`Starting timer: ${timeLeft} seconds`);
             
-            // Create a new timer function
-            const countdown = () => {
+            // Simple countdown using setInterval
+            timerInterval = setInterval(() => {
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
@@ -647,12 +648,10 @@
                     if (timeLeft <= 3) {
                         timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
                     }
-                    
-                    // Schedule next countdown
-                    timerInterval = setTimeout(countdown, 1000);
                 } else {
                     // Time's up!
                     console.log('Time is up! Moving to next question');
+                    clearInterval(timerInterval);
                     timerInterval = null;
                     
                     // Show 0 briefly
@@ -670,10 +669,7 @@
                         }
                     }, 1000);
                 }
-            };
-            
-            // Start the countdown
-            countdown();
+            }, 1000);
         }
 
         function submitQuiz() {
@@ -705,7 +701,7 @@
 
             // Stop timer
             if (timerInterval) {
-                clearTimeout(timerInterval);
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
 
@@ -836,12 +832,26 @@
 
         // Test timer function for debugging
         function testTimer() {
-            console.log('Testing timer...');
+            console.log('=== TESTING TIMER ===');
+            
+            // Reset state
             timeLeft = 5;
             advanceInProgress = false;
+            
+            // Clear any existing timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // Show initial state
             timerElement.textContent = timeLeft;
             timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
-            timerElement.style.animation = "pulse 2s ease-in-out infinite";
+            
+            console.log('Timer reset to:', timeLeft);
+            console.log('Starting test countdown...');
+            
+            // Start test timer
             startTimer();
         }
 
