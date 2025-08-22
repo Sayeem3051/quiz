@@ -630,7 +630,7 @@
                 timerInterval = null;
             }
             
-            // Reset timer display
+            // Reset timer display - show 5 first
             timerElement.textContent = timeLeft;
             timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
             timerElement.style.animation = "pulse 2s ease-in-out infinite";
@@ -673,8 +673,8 @@
                 }
             };
             
-            // Start the countdown
-            countdown();
+            // Start the countdown after 1 second to show 5 first
+            timerInterval = setTimeout(countdown, 1000);
         }
 
         function submitQuiz() {
