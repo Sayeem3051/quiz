@@ -626,7 +626,7 @@
         function startTimer() {
             // Clear any existing timer
             if (timerInterval) {
-                clearTimeout(timerInterval);
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
             
@@ -637,10 +637,8 @@
             
             console.log(`Starting timer: ${timeLeft} seconds`);
             
-            // Create a simple countdown function
-            const countdown = () => {
-                console.log(`Countdown called with timeLeft: ${timeLeft}`);
-                
+            // Use setInterval for reliable countdown
+            timerInterval = setInterval(() => {
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
@@ -650,13 +648,10 @@
                     if (timeLeft <= 3) {
                         timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
                     }
-                    
-                    // Schedule next countdown
-                    console.log(`Scheduling next countdown for ${timeLeft} seconds`);
-                    timerInterval = setTimeout(countdown, 1000);
                 } else {
                     // Time's up!
                     console.log('Time is up! Moving to next question');
+                    clearInterval(timerInterval);
                     timerInterval = null;
                     
                     // Show 0 briefly
@@ -674,10 +669,7 @@
                         }
                     }, 1000);
                 }
-            };
-            
-            // Start the countdown after 1 second to show 5 first
-            timerInterval = setTimeout(countdown, 1000);
+            }, 1000);
         }
 
         function submitQuiz() {
@@ -709,7 +701,7 @@
 
             // Stop timer
             if (timerInterval) {
-                clearTimeout(timerInterval);
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
 
@@ -848,7 +840,7 @@
             
             // Clear any existing timer
             if (timerInterval) {
-                clearTimeout(timerInterval);
+                clearInterval(timerInterval);
                 timerInterval = null;
             }
             
