@@ -15,9 +15,9 @@
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0b0f18 0%, #0a0e1a 100%);
             min-height: 100vh;
-            color: #333;
+            color: #e6e6e6;
         }
 
         .container {
@@ -27,29 +27,31 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(13, 17, 23, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #1f2937;
         }
 
         .header h1 {
-            color: #1976d2;
+            color: #58a6ff;
             font-size: 2rem;
             font-weight: 300;
         }
 
         .status-chip {
-            background: #ff9800;
-            color: white;
+            background: #0d419d;
+            color: #ffffff;
             padding: 10px 20px;
             border-radius: 25px;
             font-weight: 500;
+            border: 1px solid #1f6feb;
         }
 
         .main-content {
@@ -59,21 +61,22 @@
         }
 
         .control-panel {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(13, 17, 23, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid #1f2937;
         }
 
         .control-panel h2 {
-            color: #1976d2;
+            color: #58a6ff;
             margin-bottom: 20px;
             font-size: 1.5rem;
         }
 
         .btn {
-            background: #1976d2;
+            background: #1f6feb;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -87,41 +90,32 @@
         }
 
         .btn:hover:not(:disabled) {
-            background: #1565c0;
+            background: #2d7ff5;
             transform: translateY(-2px);
         }
 
         .btn:disabled {
-            background: #ccc;
+            background: #2f3441;
             cursor: not-allowed;
         }
 
-        .btn.success {
-            background: #4caf50;
-        }
+        .btn.success { background: #1f6feb; }
+        .btn.success:hover:not(:disabled) { background: #2d7ff5; }
 
-        .btn.success:hover:not(:disabled) {
-            background: #45a049;
-        }
-
-        .btn.danger {
-            background: #f44336;
-        }
-
-        .btn.danger:hover:not(:disabled) {
-            background: #d32f2f;
-        }
+        .btn.danger { background: #e5534b; }
+        .btn.danger:hover:not(:disabled) { background: #cc4b44; }
 
         .status-panel {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(13, 17, 23, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid #1f2937;
         }
 
         .status-panel h2 {
-            color: #1976d2;
+            color: #58a6ff;
             margin-bottom: 20px;
             font-size: 1.5rem;
         }
@@ -134,61 +128,51 @@
         }
 
         .status-card {
-            background: #f8f9fa;
+            background: #0d1117;
             border-radius: 15px;
             padding: 20px;
             text-align: center;
-            border-left: 5px solid #1976d2;
+            border-left: 5px solid #1f6feb;
+            border: 1px solid #1f2937;
         }
 
         .status-card h3 {
-            color: #666;
+            color: #9aa4b2;
             font-size: 0.9rem;
             margin-bottom: 10px;
         }
 
         .status-card .value {
-            color: #1976d2;
+            color: #58a6ff;
             font-size: 2rem;
             font-weight: 700;
         }
 
-        .clients-list {
-            margin-top: 20px;
-        }
+        .clients-list { margin-top: 20px; }
 
         .client-item {
-            background: #f8f9fa;
+            background: #0d1117;
             border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #1f2937;
         }
 
-        .client-name {
-            font-weight: 500;
-        }
+        .client-name { font-weight: 500; color: #c9d1d9; }
 
-        .client-status {
-            padding: 5px 15px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
+        .client-status { padding: 5px 15px; border-radius: 15px; font-size: 0.8rem; font-weight: 500; }
+        .status-waiting { background: #0f172a; color: #58a6ff; }
+        .status-ready { background: #0e4429; color: #3fb950; }
+        .status-quiz-active { background: #1f2937; color: #58a6ff; }
+        .status-completed { background: #0e4429; color: #3fb950; }
 
-        .status-waiting { background: #e3f2fd; color: #1976d2; }
-        .status-ready { background: #e8f5e8; color: #2e7d32; }
-        .status-quiz-active { background: #fff3e0; color: #f57c00; }
-        .status-completed { background: #e8f5e8; color: #2e7d32; }
-
-        .results-section {
-            margin-top: 30px;
-        }
+        .results-section { margin-top: 30px; }
 
         .result-item {
-            background: #f8f9fa;
+            background: #0d1117;
             border-radius: 15px;
             padding: 20px;
             margin: 15px 0;
@@ -196,92 +180,38 @@
             grid-template-columns: auto 1fr auto;
             gap: 20px;
             align-items: center;
+            border: 1px solid #1f2937;
         }
 
-        .rank {
-            background: #1976d2;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-        }
+        .rank { background: #1f6feb; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-        .result-info h4 {
-            color: #333;
-            margin-bottom: 5px;
-        }
+        .result-info h4 { color: #e6e6e6; margin-bottom: 5px; }
+        .result-info p { color: #9aa4b2; font-size: 0.9rem; }
 
-        .result-info p {
-            color: #666;
-            font-size: 0.9rem;
-        }
+        .score-badge { background: #3fb950; color: white; padding: 8px 15px; border-radius: 20px; font-weight: 500; }
 
-        .score-badge {
-            background: #4caf50;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
+        .alert { padding: 15px; border-radius: 10px; margin: 20px 0; font-weight: 500; border: 1px solid transparent; }
+        .alert.success { background: rgba(15, 66, 41, 0.5); color: #3fb950; border-color: #2ea043; }
+        .alert.error { background: rgba(56, 8, 8, 0.5); color: #f85149; border-color: #f85149; }
 
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-weight: 500;
-        }
-
-        .alert.success {
-            background: #e8f5e8;
-            color: #2e7d32;
-            border: 1px solid #4caf50;
-        }
-
-        .alert.error {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #f44336;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
+        .loading { display: none; text-align: center; padding: 20px; }
 
         .spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1976d2;
+            border: 4px solid #1f2937;
+            border-top: 4px solid #58a6ff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 10px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-            
-            .status-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .main-content { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 20px; text-align: center; }
+            .status-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -299,39 +229,29 @@
         <div class="main-content">
             <div class="control-panel">
                 <h2>🎮 Quiz Control</h2>
-                
                 <button class="btn success" id="startBtn" onclick="startQuiz()" disabled>
                     ▶️ Start Quiz
                 </button>
-                
                 <button class="btn danger" id="resetBtn" onclick="resetQuiz()" disabled>
                     ⏹️ Reset Quiz
                 </button>
-                
+                <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>
+                    ⏭️ Next Question
+                </button>
                 <button class="btn" id="downloadBtn" onclick="downloadResults()" disabled>
                     📥 Download Results
                 </button>
-                
                 <button class="btn" onclick="refreshData()">
                     🔄 Refresh Data
                 </button>
-
-                <div style="margin-top:20px">
-                    <h3 style="color:#1976d2; margin-bottom:10px">📤 Upload Quiz JSON</h3>
-                    <input type="file" id="quizFile" accept="application/json" style="margin:10px 0" />
-                    <button class="btn" onclick="uploadQuizJson()">⬆️ Upload Quiz</button>
-                    <p id="quizMeta" style="color:#666; font-size:0.9rem; margin-top:8px"></p>
-                </div>
-
+                
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <p>Processing...</p>
                 </div>
             </div>
-
             <div class="status-panel">
                 <h2>📈 System Status</h2>
-                
                 <div class="status-grid">
                     <div class="status-card">
                         <h3>Total Clients</h3>
@@ -350,16 +270,14 @@
                         <div class="value" id="pendingClients">0</div>
                     </div>
                 </div>
-
                 <div class="clients-list">
                     <h3>👥 Connected Clients</h3>
                     <div id="clientsList">
-                        <p style="text-align: center; color: #666; padding: 20px;">
+                        <p style="text-align: center; color: #9aa4b2; padding: 20px;">
                             No clients connected yet
                         </p>
                     </div>
                 </div>
-
                 <div class="results-section" id="resultsSection" style="display: none;">
                     <h3>🏆 Quiz Results</h3>
                     <div id="resultsList"></div>
@@ -392,7 +310,6 @@
                 if (statusResponse.ok) {
                     const statusData = await statusResponse.json();
                     updateStatus(statusData);
-                    updateQuizMeta(statusData);
                 }
 
                 if (resultsResponse.ok) {
@@ -505,41 +422,8 @@
             showAlert('Data refreshed', 'success');
         }
 
-        async function uploadQuizJson() {
-            const fileInput = document.getElementById('quizFile');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                showAlert('Please select a JSON file to upload', 'error');
-                return;
-            }
-            if (quizInProgress) {
-                showAlert('Reset the quiz before uploading a new one', 'error');
-                return;
-            }
-
-            setLoading(true);
-            try {
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
-
-                const response = await fetch('/api/quiz/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                    showAlert(data.error || 'Failed to upload quiz', 'error');
-                    return;
-                }
-
-                showAlert(`Uploaded: ${data.quizTitle} (${data.numQuestions} questions)`, 'success');
-                await loadInitialData();
-            } catch (err) {
-                showAlert('Failed to upload quiz', 'error');
-            } finally {
-                setLoading(false);
-            }
-        }
+        function uploadQuizJson() {}
+        function updateQuizMeta() {}
 
         function updateStatus(statusData) {
             quizInProgress = statusData.quizInProgress;
@@ -554,20 +438,41 @@
             const startBtn = document.getElementById('startBtn');
             const resetBtn = document.getElementById('resetBtn');
             const downloadBtn = document.getElementById('downloadBtn');
+            const nextBtn = document.getElementById('nextBtn');
 
             if (quizInProgress) {
                 statusElement.textContent = 'Active';
-                statusElement.style.color = '#4caf50';
+                statusElement.style.color = '#3fb950';
                 startBtn.disabled = true;
                 resetBtn.disabled = false;
+                nextBtn.disabled = false;
             } else {
                 statusElement.textContent = 'Inactive';
-                statusElement.style.color = '#666';
+                statusElement.style.color = '#9aa4b2';
                 // startBtn enabled state handled in updateStatus based on quizLoaded
                 resetBtn.disabled = true;
+                nextBtn.disabled = true;
             }
 
             downloadBtn.disabled = quizResults.length === 0;
+        }
+
+        async function nextQuestion() {
+            setLoading(true);
+            try {
+                const response = await fetch('/api/quiz/next', { method: 'POST' });
+                if (response.ok) {
+                    showAlert('Moved to next question', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.error || error.message || 'Failed to advance', 'error');
+                }
+                await loadInitialData();
+            } catch (e) {
+                showAlert('Failed to advance', 'error');
+            } finally {
+                setLoading(false);
+            }
         }
 
         function updateClientCount(count) {
@@ -585,7 +490,7 @@
             const clientsList = document.getElementById('clientsList');
             
             if (connectedClients.length === 0) {
-                clientsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No clients connected yet</p>';
+                clientsList.innerHTML = '<p style="text-align: center; color: #9aa4b2; padding: 20px;">No clients connected yet</p>';
                 return;
             }
 
@@ -629,14 +534,6 @@
                 'completed': 'Completed'
             };
             return statusMap[status] || 'Unknown';
-        }
-
-        function updateQuizMeta(statusData) {
-            const meta = document.getElementById('quizMeta');
-            if (!meta) return;
-            const title = statusData.quizTitle || 'Untitled Quiz';
-            const count = statusData.numQuestions || 0;
-            meta.textContent = `Current quiz: ${title} • ${count} questions`;
         }
 
         function setLoading(loading) {

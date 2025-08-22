@@ -62,6 +62,10 @@ class QuizClient {
                             await this.refreshQuizData();
                             this.startQuiz();
                         }
+                        // Sync question index from admin
+                        if (window.quizStarted && window.quizManager && typeof status.currentQuestionIndex === 'number') {
+                            window.quizManager.syncQuestionIndex(status.currentQuestionIndex);
+                        }
                     }
                 } catch (error) {
                     console.error('Status check error:', error);

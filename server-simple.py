@@ -25,6 +25,7 @@ connected_clients = {}
 quiz_results = []
 quiz_in_progress = False
 start_timestamp = None
+current_question_index = 0
 
 
 def validate_quiz_payload(payload: dict):
@@ -130,12 +131,13 @@ def get_status():
         'quizLoaded': quiz_data is not None,
         'quizTitle': quiz_data.get('title') if quiz_data else None,
         'numQuestions': len(quiz_data.get('questions', [])) if quiz_data else 0,
-        'startAt': start_timestamp
+        'startAt': start_timestamp,
+        'currentQuestionIndex': current_question_index
     })
 
 @app.route('/api/quiz/start', methods=['POST'])
 def start_quiz():
-    global quiz_in_progress, start_timestamp
+    global quiz_in_progress, start_timestamp, current_question_index
     if not quiz_data or not quiz_data.get('questions'):
         return jsonify({'error': 'No quiz loaded. Upload a quiz JSON first.'}), 400
     if quiz_in_progress:
@@ -143,19 +145,35 @@ def start_quiz():
     
     quiz_in_progress = True
     start_timestamp = datetime.utcnow().isoformat() + 'Z'
+    current_question_index = 0
     for client in connected_clients.values():
         client['status'] = 'quiz-active'
     
     return jsonify({'message': 'Quiz started successfully', 'startAt': start_timestamp})
 
+@app.route('/api/quiz/next', methods=['POST'])
+def next_question():
+    global current_question_index
+    if not quiz_in_progress:
+        return jsonify({'error': 'Quiz not in progress'}), 400
+    if not quiz_data or not quiz_data.get('questions'):
+        return jsonify({'error': 'No quiz loaded'}), 400
+    total = len(quiz_data.get('questions', []))
+    if current_question_index < total - 1:
+        current_question_index += 1
+        return jsonify({'message': 'Advanced to next question', 'currentQuestionIndex': current_question_index})
+    else:
+        return jsonify({'message': 'Already at last question', 'currentQuestionIndex': current_question_index})
+
 @app.route('/api/quiz/reset', methods=['POST'])
 def reset_quiz():
-    global quiz_in_progress, quiz_results, start_timestamp
+    global quiz_in_progress, quiz_results, start_timestamp, connected_clients, current_question_index
     quiz_in_progress = False
     start_timestamp = None
     quiz_results.clear()
-    for client in connected_clients.values():
-        client['status'] = 'waiting'
+    # Clear all connected clients so counts/lists reset fully
+    connected_clients.clear()
+    current_question_index = 0
     
     return jsonify({'message': 'Quiz reset successfully'})
 
@@ -266,7 +284,8 @@ def client_connect():
         'quizData': quiz_data,  # may be null if not uploaded yet
         'totalClients': len(connected_clients),
         'quizInProgress': quiz_in_progress,
-        'startAt': start_timestamp
+        'startAt': start_timestamp,
+        'currentQuestionIndex': current_question_index
     })
 
 @app.route('/api/client/submit', methods=['POST'])

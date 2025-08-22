@@ -4,9 +4,13 @@ class QuizManager {
         this.quizData = null;
         this.currentQuestionIndex = 0;
         this.answers = [];
-        this.startTime = null;
-        this.timer = null;
-        this.timeRemaining = 0;
+        this.startTime = null; // timestamp when quiz started
+        
+        // Per-question timer (5 seconds)
+        this.questionTimeLimitSeconds = 5;
+        this.questionTimer = null;
+        this.questionTimeRemaining = 0;
+        this.optionsLocked = false;
         
         this.setupEventListeners();
     }
@@ -32,19 +36,16 @@ class QuizManager {
 
     initializeQuiz(quizData, startTime) {
         this.quizData = quizData;
-        this.startTime = startTime;
+        // Record quiz start time for time taken calculation
+        this.startTime = startTime ? new Date(startTime) : new Date();
         this.currentQuestionIndex = 0;
         this.answers = new Array(quizData.questions.length).fill(null);
-        this.timeRemaining = quizData.timeLimit;
 
         // Update quiz title
         const quizTitle = document.getElementById('quizTitle');
         if (quizTitle) {
             quizTitle.textContent = quizData.title;
         }
-
-        // Start timer
-        this.startTimer();
 
         // Display first question
         this.displayQuestion();
@@ -53,33 +54,39 @@ class QuizManager {
         this.updateNavigation();
     }
 
-    startTimer() {
-        this.timer = setInterval(() => {
-            this.timeRemaining--;
-            
-            if (this.timeRemaining <= 0) {
-                this.timeRemaining = 0;
-                this.stopTimer();
-                this.submitQuiz();
+    // Per-question timer handlers
+    startQuestionTimer() {
+        this.stopQuestionTimer();
+        this.questionTimeRemaining = this.questionTimeLimitSeconds;
+        this.updateQuestionTimerDisplay();
+        this.questionTimer = setInterval(() => {
+            this.questionTimeRemaining--;
+            this.updateQuestionTimerDisplay();
+            if (this.questionTimeRemaining <= 0) {
+                this.stopQuestionTimer();
+                this.lockOptions();
+                // Advance to next question or submit if this is the last question
+                // Do not auto-advance; wait for admin's Next
+                // Auto-submit only if last question AND admin does not advance further
+                if (this.currentQuestionIndex === this.quizData.questions.length - 1) {
+                    // Keep on last question; submission will occur when admin ends or user submits
+                }
             }
-            
-            this.updateTimerDisplay();
         }, 1000);
     }
 
-    stopTimer() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
+    stopQuestionTimer() {
+        if (this.questionTimer) {
+            clearInterval(this.questionTimer);
+            this.questionTimer = null;
         }
     }
 
-    updateTimerDisplay() {
-        const timerDisplay = document.getElementById('timerDisplay');
-        if (timerDisplay) {
-            const minutes = Math.floor(this.timeRemaining / 60);
-            const seconds = this.timeRemaining % 60;
-            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    updateQuestionTimerDisplay() {
+        const questionTimerDisplay = document.getElementById('questionTimerDisplay');
+        if (questionTimerDisplay) {
+            const seconds = Math.max(0, this.questionTimeRemaining);
+            questionTimerDisplay.textContent = `00:${seconds.toString().padStart(2, '0')}`;
         }
     }
 
@@ -119,9 +126,15 @@ class QuizManager {
         const options = questionContainer.querySelectorAll('.option');
         options.forEach(option => {
             option.addEventListener('click', () => {
-                this.selectOption(parseInt(option.dataset.index));
+                if (!this.optionsLocked) {
+                    this.selectOption(parseInt(option.dataset.index));
+                }
             });
         });
+
+        // Start/restart per-question timer
+        this.startQuestionTimer();
+        this.unlockOptions();
     }
 
     selectOption(optionIndex) {
@@ -156,18 +169,47 @@ class QuizManager {
         }
     }
 
+    syncQuestionIndex(serverIndex) {
+        if (!this.quizData) return;
+        const clamped = Math.max(0, Math.min(serverIndex, this.quizData.questions.length - 1));
+        if (clamped !== this.currentQuestionIndex) {
+            this.currentQuestionIndex = clamped;
+            this.displayQuestion();
+            this.updateNavigation();
+        } else if (this.optionsLocked && this.questionTimeRemaining > 0) {
+            // keep timer consistent
+            this.updateQuestionTimerDisplay();
+        }
+    }
+
+    lockOptions() {
+        this.optionsLocked = true;
+        const options = document.querySelectorAll('.option');
+        options.forEach(opt => {
+            opt.classList.add('disabled');
+            opt.style.pointerEvents = 'none';
+            opt.style.opacity = '0.6';
+        });
+    }
+
+    unlockOptions() {
+        this.optionsLocked = false;
+        const options = document.querySelectorAll('.option');
+        options.forEach(opt => {
+            opt.classList.remove('disabled');
+            opt.style.pointerEvents = '';
+            opt.style.opacity = '';
+        });
+    }
+
     updateNavigation() {
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
 
-        if (prevBtn) {
-            prevBtn.disabled = this.currentQuestionIndex === 0;
-        }
-
-        if (nextBtn) {
-            nextBtn.disabled = this.currentQuestionIndex === this.quizData.questions.length - 1;
-        }
+        // Admin controls navigation; keep client Prev/Next disabled
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
 
         // Show submit button on last question if all questions are answered
         if (submitBtn) {
@@ -177,7 +219,7 @@ class QuizManager {
     }
 
     submitQuiz() {
-        this.stopTimer();
+        this.stopQuestionTimer();
 
         // Check if all questions are answered
         const unansweredQuestions = this.answers.filter(answer => answer === null).length;
@@ -185,8 +227,8 @@ class QuizManager {
             if (confirm(`You have ${unansweredQuestions} unanswered question(s). Are you sure you want to submit?`)) {
                 this.completeQuiz();
             } else {
-                // Resume timer if user cancels
-                this.startTimer();
+                // Resume per-question timer if user cancels
+                this.startQuestionTimer();
                 return;
             }
         } else {
@@ -194,20 +236,26 @@ class QuizManager {
         }
     }
 
+    // Submit without confirmation (used by per-question auto-advance on last question)
+    forceSubmitQuiz() {
+        this.stopQuestionTimer();
+        this.completeQuiz();
+    }
+
     completeQuiz() {
         // Calculate results
         const results = this.calculateResults();
         
-        // Submit results to server
-        if (window.quizClient) {
-            window.quizClient.submitQuizResults({
-                answers: this.answers,
-                timeTaken: this.quizData.timeLimit - this.timeRemaining,
-                completedAt: new Date()
-            });
+        // Submit results to server via client controller
+        if (window.quizClient && typeof window.quizClient.submitQuiz === 'function') {
+            try {
+                window.quizClient.submitQuiz(results.answers);
+            } catch (e) {
+                console.error('Submit failed:', e);
+            }
         }
 
-        // Show results screen
+        // Show results on the client UI
         this.showResults(results);
     }
 
@@ -223,7 +271,8 @@ class QuizManager {
         });
 
         const percentage = Math.round((score / maxScore) * 100);
-        const timeTaken = this.quizData.timeLimit - this.timeRemaining;
+        const now = new Date();
+        const timeTaken = Math.max(0, Math.round((now - this.startTime) / 1000));
 
         return {
             score,
@@ -273,12 +322,11 @@ class QuizManager {
     }
 
     resetQuiz() {
-        this.stopTimer();
+        this.stopQuestionTimer();
         this.quizData = null;
         this.currentQuestionIndex = 0;
         this.answers = [];
         this.startTime = null;
-        this.timeRemaining = 0;
 
         // Clear question container
         const questionContainer = document.getElementById('questionContainer');
@@ -286,10 +334,10 @@ class QuizManager {
             questionContainer.innerHTML = '';
         }
 
-        // Reset timer display
-        const timerDisplay = document.getElementById('timerDisplay');
-        if (timerDisplay) {
-            timerDisplay.textContent = '--:--';
+        // Reset per-question timer display
+        const questionTimerDisplay = document.getElementById('questionTimerDisplay');
+        if (questionTimerDisplay) {
+            questionTimerDisplay.textContent = '00:00';
         }
 
         // Reset question counter
