@@ -300,7 +300,7 @@
             <div class="control-panel">
                 <h2>🎮 Quiz Control</h2>
                 
-                <button class="btn success" id="startBtn" onclick="startQuiz()">
+                <button class="btn success" id="startBtn" onclick="startQuiz()" disabled>
                     ▶️ Start Quiz
                 </button>
                 
@@ -315,7 +315,14 @@
                 <button class="btn" onclick="refreshData()">
                     🔄 Refresh Data
                 </button>
-                
+
+                <div style="margin-top:20px">
+                    <h3 style="color:#1976d2; margin-bottom:10px">📤 Upload Quiz JSON</h3>
+                    <input type="file" id="quizFile" accept="application/json" style="margin:10px 0" />
+                    <button class="btn" onclick="uploadQuizJson()">⬆️ Upload Quiz</button>
+                    <p id="quizMeta" style="color:#666; font-size:0.9rem; margin-top:8px"></p>
+                </div>
+
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
                     <p>Processing...</p>
@@ -376,20 +383,29 @@
 
         async function loadInitialData() {
             try {
-                const [statusResponse, resultsResponse] = await Promise.all([
+                const [statusResponse, resultsResponse, clientsResponse] = await Promise.all([
                     fetch('/api/status'),
-                    fetch('/api/results')
+                    fetch('/api/results'),
+                    fetch('/api/clients')
                 ]);
 
                 if (statusResponse.ok) {
                     const statusData = await statusResponse.json();
                     updateStatus(statusData);
+                    updateQuizMeta(statusData);
                 }
 
                 if (resultsResponse.ok) {
                     const resultsData = await resultsResponse.json();
                     quizResults = resultsData.results;
                     updateResults();
+                }
+
+                if (clientsResponse.ok) {
+                    const clientsData = await clientsResponse.json();
+                    connectedClients = clientsData.clients || [];
+                    updateClientCount(clientsData.totalClients || connectedClients.length || 0);
+                    updateClientsList();
                 }
             } catch (error) {
                 console.error('Error loading initial data:', error);
@@ -410,6 +426,7 @@
                     quizInProgress = true;
                     updateQuizStatus();
                     showAlert('Quiz started successfully!', 'success');
+                    await loadInitialData();
                 } else {
                     const error = await response.json();
                     showAlert(error.error || 'Failed to start quiz', 'error');
@@ -437,6 +454,7 @@
                     updateQuizStatus();
                     updateResults();
                     showAlert('Quiz reset successfully!', 'success');
+                    await loadInitialData();
                 } else {
                     showAlert('Failed to reset quiz', 'error');
                 }
@@ -487,9 +505,48 @@
             showAlert('Data refreshed', 'success');
         }
 
+        async function uploadQuizJson() {
+            const fileInput = document.getElementById('quizFile');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('Please select a JSON file to upload', 'error');
+                return;
+            }
+            if (quizInProgress) {
+                showAlert('Reset the quiz before uploading a new one', 'error');
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                const response = await fetch('/api/quiz/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showAlert(data.error || 'Failed to upload quiz', 'error');
+                    return;
+                }
+
+                showAlert(`Uploaded: ${data.quizTitle} (${data.numQuestions} questions)`, 'success');
+                await loadInitialData();
+            } catch (err) {
+                showAlert('Failed to upload quiz', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
         function updateStatus(statusData) {
             quizInProgress = statusData.quizInProgress;
             updateQuizStatus();
+            // Enable/disable start based on whether quiz is loaded
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = !statusData.quizLoaded || quizInProgress;
         }
 
         function updateQuizStatus() {
@@ -506,7 +563,7 @@
             } else {
                 statusElement.textContent = 'Inactive';
                 statusElement.style.color = '#666';
-                startBtn.disabled = false;
+                // startBtn enabled state handled in updateStatus based on quizLoaded
                 resetBtn.disabled = true;
             }
 
@@ -572,6 +629,14 @@
                 'completed': 'Completed'
             };
             return statusMap[status] || 'Unknown';
+        }
+
+        function updateQuizMeta(statusData) {
+            const meta = document.getElementById('quizMeta');
+            if (!meta) return;
+            const title = statusData.quizTitle || 'Untitled Quiz';
+            const count = statusData.numQuestions || 0;
+            meta.textContent = `Current quiz: ${title} • ${count} questions`;
         }
 
         function setLoading(loading) {

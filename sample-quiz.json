@@ -1,0 +1,27 @@
+{
+  "title": "General Knowledge Quiz",
+  "description": "Test your knowledge across multiple topics",
+  "timeLimit": 600,
+  "questions": [
+    {"id": 1,  "question": "What is the capital of France?", "options": ["London","Berlin","Paris","Madrid"], "correctAnswer": 2, "points": 5},
+    {"id": 2,  "question": "Which planet is known as the Red Planet?", "options": ["Venus","Mars","Jupiter","Saturn"], "correctAnswer": 1, "points": 5},
+    {"id": 3,  "question": "Who wrote the play 'Romeo and Juliet'?", "options": ["William Shakespeare","Charles Dickens","Leo Tolstoy","Mark Twain"], "correctAnswer": 0, "points": 5},
+    {"id": 4,  "question": "What is the largest mammal in the world?", "options": ["African Elephant","Blue Whale","Giraffe","Hippopotamus"], "correctAnswer": 1, "points": 5},
+    {"id": 5,  "question": "Which element has the chemical symbol 'O'?", "options": ["Gold","Oxygen","Osmium","Silver"], "correctAnswer": 1, "points": 5},
+    {"id": 6,  "question": "In which continent is the Sahara Desert located?", "options": ["Asia","South America","Africa","Australia"], "correctAnswer": 2, "points": 5},
+    {"id": 7,  "question": "What is the smallest prime number?", "options": ["0","1","2","3"], "correctAnswer": 2, "points": 5},
+    {"id": 8,  "question": "Which language has the most native speakers?", "options": ["English","Mandarin Chinese","Spanish","Hindi"], "correctAnswer": 1, "points": 5},
+    {"id": 9,  "question": "What gas do plants absorb from the atmosphere?", "options": ["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], "correctAnswer": 2, "points": 5},
+    {"id": 10, "question": "Who painted the Mona Lisa?", "options": ["Vincent van Gogh","Pablo Picasso","Leonardo da Vinci","Claude Monet"], "correctAnswer": 2, "points": 5},
+    {"id": 11, "question": "Which ocean is the largest by surface area?", "options": ["Atlantic","Indian","Pacific","Arctic"], "correctAnswer": 2, "points": 5},
+    {"id": 12, "question": "Which country hosted the 2016 Summer Olympics?", "options": ["China","Brazil","United Kingdom","Russia"], "correctAnswer": 1, "points": 5},
+    {"id": 13, "question": "What is H2O commonly known as?", "options": ["Hydrogen Peroxide","Water","Salt","Hydrochloric Acid"], "correctAnswer": 1, "points": 5},
+    {"id": 14, "question": "Which instrument has keys, pedals, and strings?", "options": ["Guitar","Piano","Violin","Flute"], "correctAnswer": 1, "points": 5},
+    {"id": 15, "question": "In computing, what does 'CPU' stand for?", "options": ["Central Processing Unit","Computer Personal Unit","Central Program Utility","Control Processing Unit"], "correctAnswer": 0, "points": 5},
+    {"id": 16, "question": "Which metal is liquid at room temperature?", "options": ["Mercury","Iron","Aluminum","Copper"], "correctAnswer": 0, "points": 5},
+    {"id": 17, "question": "Which country is famous for the maple leaf symbol?", "options": ["Canada","Australia","Germany","Japan"], "correctAnswer": 0, "points": 5},
+    {"id": 18, "question": "What is the square root of 144?", "options": ["10","11","12","13"], "correctAnswer": 2, "points": 5},
+    {"id": 19, "question": "Which organ pumps blood through the human body?", "options": ["Lungs","Kidneys","Liver","Heart"], "correctAnswer": 3, "points": 5},
+    {"id": 20, "question": "Which continent is the Amazon rainforest primarily in?", "options": ["Africa","South America","Asia","Europe"], "correctAnswer": 1, "points": 5}
+  ]
+}

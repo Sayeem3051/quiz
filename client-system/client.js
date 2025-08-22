@@ -32,8 +32,14 @@ class QuizClient {
                 
                 console.log('Connected to server with ID:', this.clientId);
                 
-                // Start checking quiz status
-                this.startStatusCheck();
+                // If quiz already in progress, start immediately
+                if (data.quizInProgress) {
+                    await this.refreshQuizData();
+                    this.startQuiz();
+                } else {
+                    // Otherwise, start checking quiz status
+                    this.startStatusCheck();
+                }
             } else {
                 throw new Error('Failed to connect');
             }
@@ -53,6 +59,7 @@ class QuizClient {
                     if (response.ok) {
                         const status = await response.json();
                         if (status.quizInProgress && !window.quizStarted) {
+                            await this.refreshQuizData();
                             this.startQuiz();
                         }
                     }
@@ -61,6 +68,17 @@ class QuizClient {
                 }
             }
         }, 2000);
+    }
+
+    async refreshQuizData() {
+        try {
+            const response = await fetch('/api/quiz');
+            if (response.ok) {
+                this.quizData = await response.json();
+            }
+        } catch (err) {
+            console.error('Failed to refresh quiz data', err);
+        }
     }
 
     setupEventListeners() {

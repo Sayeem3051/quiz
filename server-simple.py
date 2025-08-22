@@ -6,38 +6,82 @@ import uuid
 from datetime import datetime
 import io
 import os
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'quiz-admin-secret-key'
 CORS(app)
 
-# Sample quiz data
-quiz_data = {
-    "title": "General Knowledge Quiz",
-    "description": "Test your knowledge with these general questions",
-    "timeLimit": 300,
-    "questions": [
-        {
-            "id": 1,
-            "question": "What is the capital of France?",
-            "options": ["London", "Berlin", "Paris", "Madrid"],
-            "correctAnswer": 2,
-            "points": 10
-        },
-        {
-            "id": 2,
-            "question": "Which planet is known as the Red Planet?",
-            "options": ["Venus", "Mars", "Jupiter", "Saturn"],
-            "correctAnswer": 1,
-            "points": 10
-        }
-    ]
-}
+# Uploads directory for quiz JSON
+UPLOADS_DIR = 'uploads'
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+QUIZ_JSON_PATH = os.path.join(UPLOADS_DIR, 'quiz.json')
+
+# Quiz data is loaded from disk or upload (no hardcoded fallback)
+quiz_data = None
 
 # Store data
 connected_clients = {}
 quiz_results = []
 quiz_in_progress = False
+start_timestamp = None
+
+
+def validate_quiz_payload(payload: dict):
+    """Validate minimal quiz schema."""
+    if not isinstance(payload, dict):
+        return False, 'Payload must be a JSON object'
+    required_top = ["title", "timeLimit", "questions"]
+    for key in required_top:
+        if key not in payload:
+            return False, f'Missing field: {key}'
+    if not isinstance(payload["title"], str):
+        return False, 'title must be a string'
+    if not isinstance(payload["timeLimit"], int) or payload["timeLimit"] <= 0:
+        return False, 'timeLimit must be a positive integer (seconds)'
+    if not isinstance(payload["questions"], list) or len(payload["questions"]) == 0:
+        return False, 'questions must be a non-empty array'
+    for idx, q in enumerate(payload["questions"], start=1):
+        if not isinstance(q, dict):
+            return False, f'Question {idx} must be an object'
+        for rq in ["id", "question", "options", "correctAnswer", "points"]:
+            if rq not in q:
+                return False, f'Question {idx}: missing field {rq}'
+        if not isinstance(q["id"], int):
+            return False, f'Question {idx}: id must be an integer'
+        if not isinstance(q["question"], str) or not q["question"].strip():
+            return False, f'Question {idx}: question must be a non-empty string'
+        if not isinstance(q["options"], list) or len(q["options"]) < 2:
+            return False, f'Question {idx}: options must be an array with at least 2 items'
+        if not isinstance(q["correctAnswer"], int) or not (0 <= q["correctAnswer"] < len(q["options"])):
+            return False, f'Question {idx}: correctAnswer must be a valid option index'
+        if not isinstance(q["points"], int) or q["points"] <= 0:
+            return False, f'Question {idx}: points must be a positive integer'
+    return True, None
+
+
+def load_quiz_from_disk():
+    """Load quiz JSON from disk if present; update global quiz_data."""
+    global quiz_data
+    if os.path.exists(QUIZ_JSON_PATH):
+        try:
+            with open(QUIZ_JSON_PATH, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+            ok, err = validate_quiz_payload(payload)
+            if not ok:
+                print(f"Invalid quiz.json schema: {err}. No quiz loaded.")
+                quiz_data = None
+                return
+            quiz_data = payload
+            print(f"Loaded quiz from {QUIZ_JSON_PATH}: {quiz_data.get('title')} ({len(quiz_data.get('questions', []))} questions)")
+        except Exception as e:
+            print(f"Failed to load quiz.json: {e}. No quiz loaded.")
+    else:
+        print("No quiz.json found. Upload a quiz via the admin panel.")
+
+
+# Attempt to load quiz from uploads on startup
+load_quiz_from_disk()
 
 # Serve static files
 @app.route('/')
@@ -82,30 +126,86 @@ def get_status():
         'status': 'running',
         'quizInProgress': quiz_in_progress,
         'totalClients': len(connected_clients),
-        'completedClients': len(quiz_results)
+        'completedClients': len(quiz_results),
+        'quizLoaded': quiz_data is not None,
+        'quizTitle': quiz_data.get('title') if quiz_data else None,
+        'numQuestions': len(quiz_data.get('questions', [])) if quiz_data else 0,
+        'startAt': start_timestamp
     })
 
 @app.route('/api/quiz/start', methods=['POST'])
 def start_quiz():
-    global quiz_in_progress
+    global quiz_in_progress, start_timestamp
+    if not quiz_data or not quiz_data.get('questions'):
+        return jsonify({'error': 'No quiz loaded. Upload a quiz JSON first.'}), 400
     if quiz_in_progress:
         return jsonify({'error': 'Quiz already in progress'}), 400
     
     quiz_in_progress = True
+    start_timestamp = datetime.utcnow().isoformat() + 'Z'
     for client in connected_clients.values():
-        client['status'] = 'ready'
+        client['status'] = 'quiz-active'
     
-    return jsonify({'message': 'Quiz started successfully'})
+    return jsonify({'message': 'Quiz started successfully', 'startAt': start_timestamp})
 
 @app.route('/api/quiz/reset', methods=['POST'])
 def reset_quiz():
-    global quiz_in_progress, quiz_results
+    global quiz_in_progress, quiz_results, start_timestamp
     quiz_in_progress = False
+    start_timestamp = None
     quiz_results.clear()
     for client in connected_clients.values():
         client['status'] = 'waiting'
     
     return jsonify({'message': 'Quiz reset successfully'})
+
+@app.route('/api/quiz/upload', methods=['POST'])
+def upload_quiz():
+    """Upload a quiz JSON file; replace in-memory quiz; store to disk."""
+    global quiz_data, quiz_in_progress, quiz_results
+    if quiz_in_progress:
+        return jsonify({'error': 'Cannot upload while quiz is in progress. Reset the quiz first.'}), 400
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    try:
+        content = file.read().decode('utf-8')
+        payload = json.loads(content)
+    except Exception as e:
+        return jsonify({'error': f'Invalid JSON file: {e}'}), 400
+
+    ok, err = validate_quiz_payload(payload)
+    if not ok:
+        return jsonify({'error': f'Invalid schema: {err}'}), 400
+
+    # Persist to disk
+    try:
+        with open(QUIZ_JSON_PATH, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return jsonify({'error': f'Failed to save file: {e}'}), 500
+
+    # Replace in-memory quiz and reset states
+    quiz_data = payload
+    quiz_results.clear()
+    for client in connected_clients.values():
+        client['status'] = 'waiting'
+
+    return jsonify({
+        'message': 'Quiz uploaded successfully',
+        'quizTitle': quiz_data.get('title'),
+        'numQuestions': len(quiz_data.get('questions', []))
+    })
+
+@app.route('/api/quiz', methods=['GET'])
+def get_quiz():
+    if not quiz_data:
+        return jsonify({'error': 'No quiz loaded'}), 404
+    return jsonify(quiz_data)
 
 @app.route('/api/results')
 def get_results():
@@ -158,17 +258,22 @@ def client_connect():
     client_info = {
         'id': client_id,
         'name': f'Client {len(connected_clients) + 1}',
-        'status': 'waiting'
+        'status': 'quiz-active' if quiz_in_progress else 'waiting'
     }
     connected_clients[client_id] = client_info
     return jsonify({
         'clientId': client_id,
-        'quizData': quiz_data,
-        'totalClients': len(connected_clients)
+        'quizData': quiz_data,  # may be null if not uploaded yet
+        'totalClients': len(connected_clients),
+        'quizInProgress': quiz_in_progress,
+        'startAt': start_timestamp
     })
 
 @app.route('/api/client/submit', methods=['POST'])
 def submit_quiz():
+    if not quiz_data or not quiz_data.get('questions'):
+        return jsonify({'error': 'No quiz loaded'}), 400
+
     data = request.get_json()
     client_id = data.get('clientId')
     
