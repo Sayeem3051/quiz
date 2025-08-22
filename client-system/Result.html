@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results - Individual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #533483);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .user-info {
+            margin-bottom: 30px;
+        }
+
+        .user-name {
+            color: #00ffe7;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .user-id {
+            color: white;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .progress-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .progress-circle svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-circle circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+
+        .progress-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-fill {
+            stroke: #00ffe7;
+            stroke-dasharray: 565.48;
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .result-message {
+            font-size: 1.8rem;
+            color: #00ffe7;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .result-summary {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 231, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            color: #00ffe7;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: white;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .motivational {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            color: #00ffe7;
+            font-size: 1.1rem;
+        }
+
+        .motivational-icon {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            border-radius: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ffe7, #0072ff);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 255, 231, 0.3);
+        }
+
+        .btn-secondary {
+            background: #374151;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 231, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(55, 65, 81, 0.4);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .progress-circle {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .progress-text {
+                font-size: 2rem;
+            }
+            
+            .result-message {
+                font-size: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="user-info">
+            <div class="user-name" id="userName">Demo User</div>
+        </div>
+
+        
+
+        <div class="progress-circle">
+            <svg>
+                <circle class="progress-bg" cx="100" cy="100" r="90"></circle>
+                <circle class="progress-fill" cx="100" cy="100" r="90" id="progressFill"></circle>
+            </svg>
+            <div class="progress-text" id="progressText">85%</div>
+        </div>
+
+        
+        <div class="result-summary" id="resultSummary">You answered 17 out of 20 questions correctly.</div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="correctCount">17</div>
+                <div class="stat-label">CORRECT</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="incorrectCount">3</div>
+                <div class="stat-label">INCORRECT</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="totalCount">20</div>
+                <div class="stat-label">TOTAL</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="accuracyPercent">85%</div>
+                <div class="stat-label">ACCURACY</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Build quiz results from URL params
+        // Usage: R.html?name=Alice&id=AL001&correct=17&total=20
+        // Optional: &accuracy=85 or &score=85
+        function getQuizDataFromParams() {
+            const p = new URLSearchParams(window.location.search);
+            const name = p.get('name') || 'Demo User';
+            const userId = p.get('id') || 'DEMO001';
+            const correct = Number(p.get('correct'));
+            const total = Number(p.get('total'));
+            const providedAccuracy = p.get('accuracy') ?? p.get('score');
+            let accuracy = providedAccuracy != null ? Number(providedAccuracy) : NaN;
+
+            let resolvedCorrect = isFinite(correct) ? correct : 17;
+            let resolvedTotal = isFinite(total) && total > 0 ? total : 20;
+            if (!isFinite(accuracy)) {
+                accuracy = Math.round((resolvedCorrect / resolvedTotal) * 100);
+            }
+
+            accuracy = Math.max(0, Math.min(100, accuracy));
+
+            return {
+                userName: name,
+                userId,
+                correctAnswers: resolvedCorrect,
+                totalQuestions: resolvedTotal,
+                accuracy
+            };
+        }
+
+        const quizData = getQuizDataFromParams();
+
+        function updateResults() {
+            // Update user info
+            document.getElementById('userName').textContent = quizData.userName;
+            const userIdEl = document.getElementById('userId');
+            if (userIdEl) {
+                userIdEl.textContent = `ID: ${quizData.userId}`;
+            }
+
+            // Update progress circle
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const circumference = 2 * Math.PI * 90;
+            const offset = circumference - (quizData.accuracy / 100) * circumference;
+            
+            progressFill.style.strokeDashoffset = offset;
+            progressText.textContent = `${quizData.accuracy}%`;
+
+           
+
+            // Update summary
+            document.getElementById('resultSummary').textContent = 
+                `You answered ${quizData.correctAnswers} out of ${quizData.totalQuestions} questions correctly.`;
+
+            // Update statistics
+            document.getElementById('correctCount').textContent = quizData.correctAnswers;
+            document.getElementById('incorrectCount').textContent = quizData.totalQuestions - quizData.correctAnswers;
+            document.getElementById('totalCount').textContent = quizData.totalQuestions;
+            document.getElementById('accuracyPercent').textContent = `${quizData.accuracy}%`;
+        }
+
+        function takeQuizAgain() {
+            // Redirect to quiz page
+            window.location.href = 'question.html';
+        }
+
+        function viewDetailedResults() {
+            // Open detailed results in new tab or redirect
+            window.open('detailed-results.html', '_blank');
+        }
+
+        // Initialize results
+        updateResults();
+        
+        
+
+        // Add some animation delay for the progress circle
+        setTimeout(() => {
+            document.getElementById('progressFill').style.transition = 'stroke-dashoffset 1.5s ease';
+        }, 500);
+    </script>
+</body>
+</html>

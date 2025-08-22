@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Competition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1a1a1a;
+            --accent-blue: #00d4ff;
+            --accent-green: #00ff88;
+            --accent-purple: #8b5cf6;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --success: #00ff88;
+            --error: #ff4757;
+            --warning: #ffa502;
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Merriweather', serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Tech-inspired background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Circuit lines pattern */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(90deg, transparent 98%, rgba(0, 212, 255, 0.1) 100%),
+                linear-gradient(0deg, transparent 98%, rgba(0, 212, 255, 0.1) 100%);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 1rem 2rem;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+
+
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 2rem;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--secondary-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green), var(--accent-purple));
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+
+
+        h2 {
+            font-family: 'Roboto', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .question {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .options {
+            list-style-type: none;
+            margin-bottom: 2rem;
+        }
+
+        .options li {
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .option-label:hover::before {
+            transform: translateX(100%);
+        }
+
+        .option-label:hover {
+            border-color: var(--accent-blue);
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+        }
+
+        .options input[type="radio"] {
+            display: none;
+        }
+
+        .options input[type="radio"]:checked + .option-label {
+            border-color: var(--accent-green);
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .option-text {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-left: 1rem;
+        }
+
+
+
+        .timer {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--error), #ff6b6b);
+            color: var(--text-primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .timer span {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+
+
+
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .quiz-container {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .question {
+                font-size: 1.1rem;
+            }
+
+            .option-text {
+                font-size: 1rem;
+            }
+
+            .timer {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .timer span {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .glow {
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+            to { box-shadow: 0 0 30px rgba(0, 255, 136, 0.6); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">QuizMaster</div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="quiz-container fade-in">
+
+            <h2>Quiz Competition</h2>
+            
+            <div class="question">
+                <p id="questionText">Loading question...</p>
+            </div>
+
+            <ul class="options">
+                <li>
+                    <input type="radio" name="currentQuestion" value="A" id="optionA">
+                    <label for="optionA" class="option-label">
+                        <span class="option-text" id="optionTextA">A) ...</span>
+                    </label>
+                </li>
+                <li>
+                    <input type="radio" name="currentQuestion" value="B" id="optionB">
+                    <label for="optionB" class="option-label">
+                        <span class="option-text" id="optionTextB">B) ...</span>
+                    </label>
+                </li>
+                <li>
+                    <input type="radio" name="currentQuestion" value="C" id="optionC">
+                    <label for="optionC" class="option-label">
+                        <span class="option-text" id="optionTextC">C) ...</span>
+                    </label>
+                </li>
+                <li>
+                    <input type="radio" name="currentQuestion" value="D" id="optionD">
+                    <label for="optionD" class="option-label">
+                        <span class="option-text" id="optionTextD">D) ...</span>
+                    </label>
+                </li>
+            </ul>
+
+
+
+            <div class="timer">
+                <span id="timer">5</span>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        let timeLeft = 5;
+        let currentQuestionIndex = 0;
+        let timerInterval = null; // active countdown interval
+        let advanceInProgress = false; // guard to prevent double-advance
+        const timerElement = document.getElementById("timer");
+        const questionText = document.getElementById("questionText");
+        const optionTextA = document.getElementById("optionTextA");
+        const optionTextB = document.getElementById("optionTextB");
+        const optionTextC = document.getElementById("optionTextC");
+        const optionTextD = document.getElementById("optionTextD");
+
+        // Questions loaded from server via /api/quiz (or from login connect response)
+        let questions = [];
+        // Function to display current question
+        function displayQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Update question text
+            questionText.textContent = currentQuestion.question;
+            
+            // Update options
+            const optionLabels = document.querySelectorAll('.option-label');
+            const optionInputs = document.querySelectorAll('input[name="currentQuestion"]');
+            const currentOptions = currentQuestion.options;
+            const texts = [optionTextA, optionTextB, optionTextC, optionTextD];
+
+            for (let i = 0; i < 4; i++) {
+                const label = optionLabels[i];
+                const input = optionInputs[i];
+                const textEl = texts[i];
+                const opt = currentOptions[i];
+
+                if (opt) {
+                    const letter = String.fromCharCode(65 + i); // A, B, C, D
+                    textEl.textContent = `${letter}) ${opt}`;
+                    input.value = String(i);
+                    input.checked = false;
+                    input.disabled = false;
+                    label.style.display = '';
+                } else {
+                    // Hide unused options if fewer than 4 provided
+                    label.style.display = 'none';
+                    input.checked = false;
+                    input.disabled = true;
+                }
+                label.classList.remove('glow');
+            }
+            
+            // Reset timer
+            timeLeft = 5;
+            timerElement.textContent = timeLeft;
+            
+            // Start timer for this question
+            startTimer();
+        }
+        
+        // Add micro-interactions to options and auto-submit
+        const selections = [];
+
+        document.querySelectorAll('.option-label').forEach(label => {
+            label.addEventListener('click', function() {
+                // Remove glow from all options
+                document.querySelectorAll('.option-label').forEach(l => l.classList.remove('glow'));
+                
+                // Add glow to selected option
+                this.classList.add('glow');
+                
+                // Auto-submit the answer (defer to ensure radio is checked)
+                setTimeout(() => submitQuiz(), 0);
+            });
+        });
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    timerElement.textContent = timeLeft;
+                    // Add pulse animation when time is running low
+                    if (timeLeft <= 3) {
+                        timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
+                    }
+                } else {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    if (advanceInProgress) return;
+                    advanceInProgress = true;
+                    // If unanswered, record as unanswered (null)
+                    if (selections[currentQuestionIndex] === undefined) {
+                        selections[currentQuestionIndex] = null;
+                    }
+                    moveToNextQuestion();
+                }
+            }, 1000);
+        }
+
+        function submitQuiz() {
+            const selectedOption = document.querySelector('input[name="currentQuestion"]:checked');
+            
+            if (!selectedOption) {
+                document.querySelector('.quiz-container').classList.add('shake');
+                setTimeout(() => {
+                    document.querySelector('.quiz-container').classList.remove('shake');
+                }, 500);
+                return;
+            }
+
+            if (advanceInProgress) return;
+            advanceInProgress = true;
+
+            // Disable all inputs after submission
+            document.querySelectorAll('input[type="radio"]').forEach(input => {
+                input.disabled = true;
+            });
+
+            // Record selection for this question as index (number string)
+            selections[currentQuestionIndex] = Number(selectedOption.value);
+
+            // Stop countdown to prevent double-advance
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // Immediately advance
+            moveToNextQuestion();
+        }
+        
+        function moveToNextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                // Move to next question
+                advanceInProgress = false;
+                // reset timer animation visual
+                timerElement.style.animation = "pulse 2s ease-in-out infinite";
+                displayQuestion();
+            } else {
+                // Quiz completed: compute score, store attempt, redirect to results
+                const clientId = localStorage.getItem('clientId');
+                const teamName = (localStorage.getItem('teamName') || 'Player').trim();
+                const payload = {
+                    clientId,
+                    answers: selections
+                };
+                fetch('/api/client/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(async (res) => {
+                    if (!res.ok) throw new Error('submit failed');
+                    return res.json();
+                })
+                .then((data) => {
+                    const correct = Number(data && data.score) || 0;
+                    const maxScore = Number(data && data.maxScore) || questions.length;
+                    const accuracy = Number(data && data.percentage) || Math.round((correct / (maxScore || 1)) * 100);
+                    const params = new URLSearchParams({
+                        name: teamName,
+                        correct: String(correct),
+                        total: String(questions.length),
+                        accuracy: String(accuracy)
+                    });
+                    window.location.href = `Result.html?${params.toString()}`;
+                })
+                .catch(() => {
+                    // Fallback: compute locally if server submit fails
+                    const totalQuestions = questions.length;
+                    let correctAnswers = 0;
+                    questions.forEach((q, idx) => {
+                        if (typeof selections[idx] === 'number' && selections[idx] === q.correctAnswer) correctAnswers++;
+                    });
+                    const accuracy = Math.round((correctAnswers / (totalQuestions || 1)) * 100);
+                    const params = new URLSearchParams({
+                        name: teamName,
+                        correct: String(correctAnswers),
+                        total: String(totalQuestions),
+                        accuracy: String(accuracy)
+                    });
+                    window.location.href = `Result.html?${params.toString()}`;
+                });
+            }
+        }
+
+        function showLoadError(message) {
+            questionText.textContent = message || 'Failed to load questions. Please try again later.';
+        }
+
+        async function initializeQuestions() {
+            // Use cached quiz from login step if present
+            try {
+                const cached = localStorage.getItem('quizData');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed && Array.isArray(parsed.questions) && parsed.questions.length) {
+                        questions = parsed.questions;
+                        return true;
+                    }
+                }
+            } catch (e) {}
+
+            // Otherwise fetch from server
+            try {
+                const res = await fetch('/api/quiz');
+                if (!res.ok) throw new Error('failed');
+                const data = await res.json();
+                if (data && Array.isArray(data.questions) && data.questions.length) {
+                    questions = data.questions;
+                    try { localStorage.setItem('quizData', JSON.stringify(data)); } catch (e) {}
+                    return true;
+                }
+                showLoadError('No quiz questions available.');
+                return false;
+            } catch (e) {
+                showLoadError('Error loading quiz from server.');
+                return false;
+            }
+        }
+
+        window.onload = function() {
+            initializeQuestions().then((ok) => { if (ok) displayQuestion(); });
+        };
+    </script>
+</body>
+</html>
