@@ -623,40 +623,43 @@
         });
 
         function startTimer() {
-            // Stop any existing timer
+            // Clear any existing timer
             if (timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
             }
             
-            // Set initial display
+            // Reset timer display
             timerElement.textContent = timeLeft;
             timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
             timerElement.style.animation = "pulse 2s ease-in-out infinite";
             
             console.log(`Starting timer: ${timeLeft} seconds`);
             
-            // Start countdown
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                timerElement.textContent = timeLeft;
-                console.log(`Timer: ${timeLeft} seconds left`);
-                
-                // Visual feedback for low time
-                if (timeLeft <= 3) {
-                    timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
-                }
-                
-                // When timer reaches 0
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
+            // Create a new timer function
+            const countdown = () => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    timerElement.textContent = timeLeft;
+                    console.log(`Timer: ${timeLeft} seconds left`);
+                    
+                    // Visual feedback for low time
+                    if (timeLeft <= 3) {
+                        timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
+                    }
+                    
+                    // Schedule next countdown
+                    timerInterval = setTimeout(countdown, 1000);
+                } else {
+                    // Time's up!
+                    console.log('Time is up! Moving to next question');
                     timerInterval = null;
                     
-                    // Show 0
+                    // Show 0 briefly
                     timerElement.textContent = '0';
                     timerElement.style.background = 'linear-gradient(45deg, #ff0000, #ff6b6b)';
                     
-                    // Wait 1 second then advance
+                    // Move to next question after showing 0
                     setTimeout(() => {
                         if (!advanceInProgress) {
                             advanceInProgress = true;
@@ -667,7 +670,10 @@
                         }
                     }, 1000);
                 }
-            }, 1000);
+            };
+            
+            // Start the countdown
+            countdown();
         }
 
         function submitQuiz() {
@@ -699,21 +705,15 @@
 
             // Stop timer
             if (timerInterval) {
-                clearInterval(timerInterval);
+                clearTimeout(timerInterval);
                 timerInterval = null;
             }
 
             // Record answer
             selections[currentQuestionIndex] = Number(selectedOption.value);
 
-            // Show success feedback
-            timerElement.textContent = '✓';
-            timerElement.style.background = 'linear-gradient(45deg, var(--success), #00ff88)';
-
-            // Advance after showing checkmark
-            setTimeout(() => {
-                moveToNextQuestion();
-            }, 800);
+            // Advance immediately without showing tick mark
+            moveToNextQuestion();
         }
         
         function moveToNextQuestion() {
@@ -836,26 +836,12 @@
 
         // Test timer function for debugging
         function testTimer() {
-            console.log('=== TESTING TIMER ===');
-            
-            // Reset state
+            console.log('Testing timer...');
             timeLeft = 5;
             advanceInProgress = false;
-            
-            // Clear any existing timer
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            
-            // Show initial state
             timerElement.textContent = timeLeft;
             timerElement.style.background = "linear-gradient(45deg, var(--error), #ff6b6b)";
-            
-            console.log('Timer reset to:', timeLeft);
-            console.log('Starting test countdown...');
-            
-            // Start test timer
+            timerElement.style.animation = "pulse 2s ease-in-out infinite";
             startTimer();
         }
 
