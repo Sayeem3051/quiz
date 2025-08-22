@@ -626,7 +626,7 @@
         function startTimer() {
             // Clear any existing timer
             if (timerInterval) {
-                clearInterval(timerInterval);
+                clearTimeout(timerInterval);
                 timerInterval = null;
             }
             
@@ -639,6 +639,8 @@
             
             // Create a simple countdown function
             const countdown = () => {
+                console.log(`Countdown called with timeLeft: ${timeLeft}`);
+                
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
@@ -650,6 +652,7 @@
                     }
                     
                     // Schedule next countdown
+                    console.log(`Scheduling next countdown for ${timeLeft} seconds`);
                     timerInterval = setTimeout(countdown, 1000);
                 } else {
                     // Time's up!
