@@ -143,6 +143,54 @@
             line-height: 1.6;
         }
 
+        .waiting-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .waiting-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-blue);
+        }
+
+        .waiting-message {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .status-indicator {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--accent-blue);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-text {
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        .refresh-btn {
+            background: var(--accent-blue);
+            color: var(--text-primary);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent-green);
+            transform: translateY(-2px);
+        }
+
         .loading-spinner {
             width: 60px;
             height: 60px;
@@ -203,11 +251,6 @@
             height: 4px;
             background: linear-gradient(90deg, var(--accent-blue), var(--accent-green), var(--accent-purple));
             animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { transform: translateX(-100%); }
-            50% { transform: translateX(100%); }
         }
 
 
@@ -407,11 +450,17 @@
     </header>
 
     <main class="main-content">
-        <div class="waiting-screen fade-in" id="waitingScreen">
-            <h1>Quiz Competition</h1>
-            <p>Waiting for the quiz to start...</p>
-            <div class="loading-spinner"></div>
-            <div class="countdown" id="countdown" style="display: none;">5</div>
+        <!-- Waiting Screen (shown until admin starts quiz) -->
+        <div class="waiting-screen" id="waitingScreen">
+            <div class="waiting-icon">⏳</div>
+            <h1 class="waiting-title">Please Wait</h1>
+            <p class="waiting-message">
+                The quiz has not started yet. Please wait for the administrator to begin the quiz session.
+            </p>
+            <div class="status-indicator">
+                <div class="status-text" id="statusText">Checking quiz status...</div>
+            </div>
+            <button class="refresh-btn" onclick="checkQuizStatus()">Refresh Status</button>
         </div>
 
         <div class="quiz-container fade-in" id="quizContainer" style="display: none;">
@@ -471,93 +520,47 @@
         const optionTextC = document.getElementById("optionTextC");
         const optionTextD = document.getElementById("optionTextD");
 
-        // Check quiz status and handle transitions
+        // Function to check if quiz has started
         async function checkQuizStatus() {
             try {
                 const response = await fetch('/api/status');
                 if (response.ok) {
                     const data = await response.json();
-                    const waitingScreen = document.getElementById('waitingScreen');
-                    const quizContainer = document.getElementById('quizContainer');
-                    const countdown = document.getElementById('countdown');
+                    quizStarted = data.quizInProgress || false;
                     
-                    if (data.quizInProgress && !quizStarted) {
-                        // Quiz just started, show countdown and transition
-                        quizStarted = true;
-                        waitingScreen.classList.add('quiz-starting');
-                        waitingScreen.querySelector('h1').textContent = 'Quiz Starting!';
-                        waitingScreen.querySelector('p').textContent = 'Get ready! The quiz will begin in:';
-                        waitingScreen.querySelector('.loading-spinner').style.display = 'none';
-                        countdown.style.display = 'block';
+                    if (quizStarted) {
+                        // Quiz has started, show quiz interface
+                        document.getElementById('waitingScreen').style.display = 'none';
+                        document.getElementById('quizContainer').style.display = 'block';
+                        document.getElementById('statusText').textContent = 'Quiz is now active!';
                         
-                        // Start countdown
-                        let countdownValue = 5;
-                        countdown.textContent = countdownValue;
-                        
-                        const countdownInterval = setInterval(() => {
-                            countdownValue--;
-                            countdown.textContent = countdownValue;
-                            
-                            if (countdownValue <= 0) {
-                                clearInterval(countdownInterval);
-                                // Transition to quiz
-                                waitingScreen.style.display = 'none';
-                                quizContainer.style.display = 'block';
+                        // Initialize and start the quiz
+                        if (questions.length > 0) {
+                            displayQuestion();
+                        } else {
+                            await initializeQuestions();
+                            if (questions.length > 0) {
                                 displayQuestion();
                             }
-                        }, 1000);
-                        
-                    } else if (!data.quizInProgress && quizStarted) {
-                        // Quiz was reset, go back to waiting
-                        quizStarted = false;
-                        waitingScreen.style.display = 'block';
-                        quizContainer.style.display = 'none';
-                        waitingScreen.classList.remove('quiz-starting');
-                        waitingScreen.querySelector('h1').textContent = 'Quiz Competition';
-                        waitingScreen.querySelector('p').textContent = 'Waiting for the quiz to start...';
-                        waitingScreen.querySelector('.loading-spinner').style.display = 'block';
-                        countdown.style.display = 'none';
-                        
-                        // Reset quiz state
-                        currentQuestionIndex = 0;
-                        selections = new Array(questions.length).fill(null);
-                        if (timerInterval) {
-                            clearInterval(timerInterval);
-                            timerInterval = null;
                         }
+                    } else {
+                        // Quiz hasn't started yet
+                        document.getElementById('waitingScreen').style.display = 'block';
+                        document.getElementById('quizContainer').style.display = 'none';
+                        document.getElementById('statusText').textContent = 'Waiting for admin to start quiz...';
                     }
+                } else {
+                    document.getElementById('statusText').textContent = 'Error checking quiz status';
                 }
             } catch (error) {
+                document.getElementById('statusText').textContent = 'Connection error. Please try again.';
                 console.error('Error checking quiz status:', error);
             }
         }
 
-        // Check status every 2 seconds
-        setInterval(checkQuizStatus, 2000);
-        
-        // Check status immediately on page load
-        checkQuizStatus();
 
-        // Also check if quiz is already in progress when page loads
-        async function checkInitialStatus() {
-            try {
-                const response = await fetch('/api/status');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.quizInProgress) {
-                        // Quiz is already running, start immediately
-                        quizStarted = true;
-                        const waitingScreen = document.getElementById('waitingScreen');
-                        const quizContainer = document.getElementById('quizContainer');
-                        waitingScreen.style.display = 'none';
-                        quizContainer.style.display = 'block';
-                        displayQuestion();
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking initial status:', error);
-            }
-        }
+
+
 
         // Questions loaded from server via /api/quiz (or from login connect response)
         // Function to display current question
@@ -620,6 +623,13 @@
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
+                // Check if quiz is still active
+                if (!quizStarted) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    return;
+                }
+
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
@@ -642,6 +652,15 @@
         }
 
         function submitQuiz() {
+            // Check if quiz is still active
+            if (!quizStarted) {
+                console.log('Quiz was stopped by admin');
+                document.getElementById('waitingScreen').style.display = 'block';
+                document.getElementById('quizContainer').style.display = 'none';
+                document.getElementById('statusText').textContent = 'Quiz was stopped by admin. Please wait for it to start again.';
+                return;
+            }
+
             const selectedOption = document.querySelector('input[name="currentQuestion"]:checked');
             
             if (!selectedOption) {
@@ -674,6 +693,16 @@
         }
         
         function moveToNextQuestion() {
+            // Check if quiz is still active before proceeding
+            if (!quizStarted) {
+                console.log('Quiz was stopped by admin');
+                // Show waiting screen again
+                document.getElementById('waitingScreen').style.display = 'block';
+                document.getElementById('quizContainer').style.display = 'none';
+                document.getElementById('statusText').textContent = 'Quiz was stopped by admin. Please wait for it to start again.';
+                return;
+            }
+
             currentQuestionIndex++;
             
             if (currentQuestionIndex < questions.length) {
@@ -783,15 +812,11 @@
 
         // Check initial status after questions are loaded
         window.onload = function() {
-            initializeQuestions().then((ok) => { 
-                if (ok) {
-                    // Questions are loaded, check if quiz is already running
-                    checkInitialStatus();
-                } else {
-                    // If no questions, show error message
-                    document.querySelector('.waiting-screen').innerHTML = '<h1>Error: No Quiz Available</h1><p>Please check back later or contact the administrator.</p>';
-                }
-            });
+            // First check if quiz has started
+            checkQuizStatus();
+            
+            // Set up periodic status checking every 3 seconds
+            setInterval(checkQuizStatus, 3000);
         };
     </script>
 </body>
