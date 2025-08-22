@@ -243,30 +243,105 @@ def get_quiz():
         return jsonify({'error': 'No quiz loaded'}), 404
     return jsonify(quiz_data)
 
+def validate_quiz_result(result):
+    """Validate and clean up quiz result data structure."""
+    if not isinstance(result, dict):
+        return False
+    
+    # Check if it's the old format and convert it
+    if 'score' in result and 'maxScore' in result:
+        # Old format - convert to new format
+        try:
+            score = result.get('score', 0)
+            max_score = result.get('maxScore', 0)
+            if max_score > 0:
+                correct_answers = round((score / max_score) * 20)  # Convert to 20 questions
+                total_questions = 20
+                incorrect_answers = total_questions - correct_answers
+                accuracy = round((correct_answers / total_questions) * 100)
+            else:
+                correct_answers = 0
+                total_questions = 20
+                incorrect_answers = 20
+                accuracy = 0
+            
+            # Update the result with new structure
+            result['correctAnswers'] = correct_answers
+            result['totalQuestions'] = total_questions
+            result['incorrectAnswers'] = incorrect_answers
+            result['accuracy'] = accuracy
+            
+            # Remove old fields
+            result.pop('score', None)
+            result.pop('maxScore', None)
+            result.pop('percentage', None)
+            
+            return True
+        except Exception as e:
+            print(f"Error converting old result format: {e}")
+            return False
+    
+    # Check if it has the new format
+    required_fields = ['correctAnswers', 'totalQuestions', 'incorrectAnswers', 'accuracy']
+    return all(field in result for field in required_fields)
+
 @app.route('/api/results')
 def get_results():
-    sorted_results = sorted(quiz_results, key=lambda x: (-x['score'], x['timeTaken']))
+    # Validate and clean up all results
+    valid_results = []
+    for result in quiz_results:
+        if validate_quiz_result(result):
+            valid_results.append(result)
+        else:
+            print(f"Invalid result removed: {result}")
+    
+    # Update the global quiz_results with cleaned data
+    quiz_results.clear()
+    quiz_results.extend(valid_results)
+    
+    sorted_results = sorted(quiz_results, key=lambda x: (-x['correctAnswers'], x.get('timeTaken', 0)))
     return jsonify({'results': sorted_results})
 
 @app.route('/api/results/download')
 def download_results():
     try:
+        if not quiz_results:
+            return jsonify({'error': 'No results available to download'}), 404
+        
+        # Validate all results before processing
+        valid_results = []
+        for result in quiz_results:
+            if validate_quiz_result(result):
+                valid_results.append(result)
+            else:
+                print(f"Invalid result found during download: {result}")
+        
+        if not valid_results:
+            return jsonify({'error': 'No valid results available to download'}), 404
+            
         wb = Workbook()
         ws = wb.active
         ws.title = "Quiz Results"
         
-        headers = ['Rank', 'Client Name', 'Score', 'Max Score', 'Percentage']
-        for col, header in enumerate(headers, 1):
-            cell = ws.cell(row=1, column=col, value=header)
-            cell.font = Font(bold=True)
+        # Sort results by correct answers (descending) and then by time taken
+        sorted_results = sorted(valid_results, key=lambda x: (-x['correctAnswers'], x.get('timeTaken', 0)))
         
-        sorted_results = sorted(quiz_results, key=lambda x: (-x['score'], x['timeTaken']))
-        for row, result in enumerate(sorted_results, 2):
+        # Add headers
+        ws.cell(row=1, column=1, value='Rank')
+        ws.cell(row=1, column=2, value='Player Name')
+        ws.cell(row=1, column=3, value='Correct Answers')
+        ws.cell(row=1, column=4, value='Total Questions')
+        ws.cell(row=1, column=5, value='Incorrect Answers')
+        ws.cell(row=1, column=6, value='Accuracy')
+        
+        # Add data
+        for row, result in enumerate(sorted_results, start=2):
             ws.cell(row=row, column=1, value=row-1)
             ws.cell(row=row, column=2, value=result['clientName'])
-            ws.cell(row=row, column=3, value=result['score'])
-            ws.cell(row=row, column=4, value=result['maxScore'])
-            ws.cell(row=row, column=5, value=f"{result['percentage']}%")
+            ws.cell(row=row, column=3, value=result['correctAnswers'])
+            ws.cell(row=row, column=4, value=result['totalQuestions'])
+            ws.cell(row=row, column=5, value=result['incorrectAnswers'])
+            ws.cell(row=row, column=6, value=f"{result['accuracy']}%")
         
         output = io.BytesIO()
         wb.save(output)
@@ -279,7 +354,8 @@ def download_results():
             download_name='quiz-results.xlsx'
         )
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error downloading results: {e}")
+        return jsonify({'error': f'Failed to generate Excel file: {str(e)}'}), 500
 
 @app.route('/api/clients')
 def get_clients():
@@ -327,22 +403,43 @@ def submit_quiz():
     client = connected_clients[client_id]
     client['status'] = 'completed'
     
-    score = 0
-    for i, answer in enumerate(data['answers']):
-        if i < len(quiz_data['questions']):
-            question = quiz_data['questions'][i]
-            if answer == question['correctAnswer']:
-                score += question['points']
+    # Debug logging
+    print(f"Client {client['name']} submitted answers: {data.get('answers')}")
+    print(f"Quiz has {len(quiz_data['questions'])} questions")
     
-    max_score = sum(q['points'] for q in quiz_data['questions'])
-    percentage = round((score / max_score) * 100) if max_score > 0 else 0
+    correct_answers = 0
+    total_questions = len(quiz_data['questions'])
+    answers = data.get('answers', [])
+    
+    for i, answer in enumerate(answers):
+        if i < total_questions:
+            question = quiz_data['questions'][i]
+            # Handle both string and numeric answers
+            if isinstance(answer, str):
+                try:
+                    answer = int(answer)
+                except ValueError:
+                    answer = None
+            
+            if answer is not None and answer == question['correctAnswer']:
+                correct_answers += 1
+                print(f"Question {i+1}: Correct! Answer: {answer}")
+            else:
+                print(f"Question {i+1}: Wrong. Expected {question['correctAnswer']}, got {answer}")
+    
+    # Calculate based on question count, not points
+    incorrect_answers = total_questions - correct_answers
+    accuracy = round((correct_answers / total_questions) * 100) if total_questions > 0 else 0
+    
+    print(f"Final result: {correct_answers}/{total_questions} correct ({accuracy}%)")
     
     quiz_result = {
         'clientId': client_id,
         'clientName': client['name'],
-        'score': score,
-        'maxScore': max_score,
-        'percentage': percentage,
+        'correctAnswers': correct_answers,
+        'totalQuestions': total_questions,
+        'incorrectAnswers': incorrect_answers,
+        'accuracy': accuracy,
         'timeTaken': 0
     }
     
@@ -350,9 +447,10 @@ def submit_quiz():
     
     return jsonify({
         'message': 'Quiz submitted successfully',
-        'score': score,
-        'maxScore': max_score,
-        'percentage': percentage
+        'correctAnswers': correct_answers,
+        'totalQuestions': total_questions,
+        'incorrectAnswers': incorrect_answers,
+        'accuracy': accuracy
     })
 
 if __name__ == '__main__':

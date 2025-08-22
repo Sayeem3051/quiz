@@ -135,6 +135,30 @@
       transition: var(--transition);
     }
     .login-button:hover { transform: translateY(-2px); background: #eaeaea; }
+    .login-button.disabled {
+      background: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .quiz-status {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(255, 165, 2, 0.1);
+      border: 1px solid rgba(255, 165, 2, 0.3);
+      border-radius: var(--border-radius);
+      color: #ffa502;
+    }
+
+    .quiz-status p {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .quiz-status strong {
+      color: #ffa502;
+    }
 
     .disclaimer {
       margin: 16px auto 0;
@@ -175,11 +199,15 @@
         <div class="welcome-screen" id="welcomeScreen">
           <div class="welcome-content">
             <h1>Quiz Client System</h1>
-            <p>Waiting for quiz to start...</p>
-            <div class="loading-spinner"></div>
+            <p id="statusMessage">Waiting for quiz to start...</p>
+            <div class="loading-spinner" id="loadingSpinner"></div>
             <div class="connection-info">
               <p>Connected to server</p>
               <p>Status: <span id="waitingStatus">Waiting</span></p>
+            </div>
+            <div class="quiz-status" id="quizStatus" style="display: none;">
+              <p><strong>⚠️ Quiz Already in Progress</strong></p>
+              <p>Please wait for the current quiz to finish or ask the administrator to reset it.</p>
             </div>
           </div>
         </div>
@@ -209,6 +237,65 @@
       } catch (e) {}
     })();
 
+    // Check quiz status and update button state
+    async function checkQuizStatus() {
+      try {
+        const response = await fetch('/api/status');
+        if (response.ok) {
+          const data = await response.json();
+          const startBtn = document.getElementById('loginBtn');
+          const waitingStatus = document.getElementById('waitingStatus');
+          const quizStatusDiv = document.getElementById('quizStatus');
+          const statusMessage = document.getElementById('statusMessage');
+          const loadingSpinner = document.getElementById('loadingSpinner');
+          
+          if (data.quizInProgress) {
+            // Quiz is already in progress, disable button
+            startBtn.disabled = true;
+            startBtn.textContent = 'Quiz Already Started';
+            startBtn.classList.add('disabled');
+            if (waitingStatus) waitingStatus.textContent = 'Quiz in Progress';
+            if (quizStatusDiv) quizStatusDiv.style.display = 'block';
+            if (statusMessage) statusMessage.textContent = 'Quiz is already in progress. Please wait or ask the administrator to reset it.';
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+            
+            // If client is already connected, redirect to question page
+            const clientId = localStorage.getItem('clientId');
+            if (clientId) {
+              let countdown = 3;
+              const countdownInterval = setInterval(() => {
+                if (statusMessage) {
+                  statusMessage.textContent = `Quiz started! Redirecting to questions in ${countdown} seconds...`;
+                }
+                countdown--;
+                if (countdown < 0) {
+                  clearInterval(countdownInterval);
+                  window.location.href = '/client-system/question.html';
+                }
+              }, 1000);
+            }
+          } else {
+            // Quiz not started, enable button
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start Quiz';
+            startBtn.classList.remove('disabled');
+            if (waitingStatus) waitingStatus.textContent = 'Waiting';
+            if (quizStatusDiv) quizStatusDiv.style.display = 'none';
+            if (statusMessage) statusMessage.textContent = 'Waiting for quiz to start...';
+            if (loadingSpinner) loadingSpinner.style.display = 'block';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking quiz status:', error);
+      }
+    }
+
+    // Check status every 2 seconds
+    setInterval(checkQuizStatus, 2000);
+    
+    // Check status immediately on page load
+    checkQuizStatus();
+
     document.getElementById('loginBtn').addEventListener('click', function () {
       const teamNameInput = document.getElementById('teamName');
       const teamName = (teamNameInput.value || '').trim();
@@ -216,6 +303,26 @@
         teamNameInput.focus();
         return;
       }
+      
+      // Check if button is disabled (quiz already started)
+      if (this.disabled) {
+        return;
+      }
+      
+      // Check quiz status one more time before connecting
+      checkQuizStatus().then(() => {
+        const startBtn = document.getElementById('loginBtn');
+        if (startBtn.disabled) {
+          return; // Quiz started while user was typing
+        }
+        
+        // Proceed with connection
+        connectClient(teamName);
+      });
+    });
+    
+    // Separate function for client connection
+    function connectClient(teamName) {
       // Persist team name for attributing results
       try {
         localStorage.setItem('teamName', teamName);
@@ -253,7 +360,7 @@
         // Best-effort redirect even if connect failed; question page will handle errors
         window.location.href = '/client-system/question.html';
       });
-    });
+    }
   </script>
 
 </body>
