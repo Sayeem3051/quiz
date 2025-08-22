@@ -567,6 +567,8 @@
         function displayQuestion() {
             const currentQuestion = questions[currentQuestionIndex];
             
+            console.log(`Displaying question ${currentQuestionIndex + 1}: ${currentQuestion.question}`);
+            
             // Update question text
             questionText.textContent = currentQuestion.question;
             
@@ -598,9 +600,11 @@
                 label.classList.remove('glow');
             }
             
-            // Reset timer
+            // Reset timer and advanceInProgress flag
             timeLeft = 5;
+            advanceInProgress = false;
             timerElement.textContent = timeLeft;
+            console.log(`Timer reset to ${timeLeft} seconds`);
             
             // Start timer for this question
             startTimer();
@@ -622,6 +626,12 @@
 
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
+            
+            // Reset timer animation
+            timerElement.style.animation = "pulse 2s ease-in-out infinite";
+            
+            console.log(`Starting timer for question ${currentQuestionIndex + 1}, time left: ${timeLeft}`);
+            
             timerInterval = setInterval(() => {
                 // Check if quiz is still active
                 if (!quizStarted) {
@@ -633,20 +643,38 @@
                 if (timeLeft > 0) {
                     timeLeft--;
                     timerElement.textContent = timeLeft;
+                    console.log(`Timer: ${timeLeft} seconds left`);
+                    
                     // Add pulse animation when time is running low
                     if (timeLeft <= 3) {
                         timerElement.style.animation = "pulse 0.5s ease-in-out infinite";
                     }
                 } else {
+                    // Time's up!
+                    console.log('Time is up! Moving to next question');
                     clearInterval(timerInterval);
                     timerInterval = null;
-                    if (advanceInProgress) return;
+                    
+                    if (advanceInProgress) {
+                        console.log('Already advancing, skipping');
+                        return;
+                    }
+                    
                     advanceInProgress = true;
                     // If unanswered, record as unanswered (null)
                     if (selections[currentQuestionIndex] === undefined) {
                         selections[currentQuestionIndex] = null;
+                        console.log('Recording unanswered question');
                     }
-                    moveToNextQuestion();
+                    
+                    // Show 0 for a moment before advancing
+                    timerElement.textContent = '0';
+                    timerElement.style.background = 'linear-gradient(45deg, #ff0000, #ff6b6b)';
+                    timerElement.style.animation = 'pulse 0.3s ease-in-out infinite';
+                    
+                    setTimeout(() => {
+                        moveToNextQuestion();
+                    }, 1000);
                 }
             }, 1000);
         }
@@ -671,7 +699,12 @@
                 return;
             }
 
-            if (advanceInProgress) return;
+            if (advanceInProgress) {
+                console.log('Already advancing, ignoring submit');
+                return;
+            }
+            
+            console.log('Answer submitted, advancing to next question');
             advanceInProgress = true;
 
             // Disable all inputs after submission
